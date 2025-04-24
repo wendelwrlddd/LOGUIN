@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Painel</title>
+  <link rel="stylesheet" href="stilos.css">
+</head>
+<body>
+  <div class="wrapper">
+    <div class="container">
+      <h1>Bem-vindo ao Sistema de Diário</h1>
+      <p id="boas-vindas"></p>
+      <form id="diary-form">
+        <textarea id="diary-entry" placeholder="Escreva aqui..." rows="5" style="width:100%; margin-bottom:10px;"></textarea>
+        <button type="submit">Adicionar</button>
+      </form>
+      <ul id="diary-list"></ul>
+      <button onclick="logout()" style="margin-top:20px;">Sair</button>
+    </div>
+  </div>
+  <script>
+    const token = localStorage.getItem("token");
+    const name = localStorage.getItem("username");
+    document.getElementById("boas-vindas").innerText = `Olá, ${name}!`;
+
+    async function fetchDiary() {
+      const res = await fetch("/dashboard", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      const list = document.getElementById("diary-list");
+      list.innerHTML = ""; // Limpa o conteúdo da lista antes de adicionar as novas entradas
+
+      // Exibindo cada entrada de diário
+      data.diary.forEach(entry => {
+        const li = document.createElement("li");
+        li.innerText = entry.content; // Agora estamos acessando o campo "content" da entrada
+        list.appendChild(li);
+      });
+    }
+
+    document.getElementById("diary-form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const content = document.getElementById("diary-entry").value;
+
+      // Enviar nova entrada de diário
+      await fetch("/add-diary", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ content }),
+      });
+
+      // Limpar o campo de texto após enviar a entrada
+      document.getElementById("diary-entry").value = "";
+
+      // Atualizar o diário
+      fetchDiary();
+    });
+
+    function logout() {
+      localStorage.clear();
+      window.location.href = "/";
+    }
+
+    // Carregar o diário ao iniciar a página
+    fetchDiary();
+  </script>
+</body>
+</html>

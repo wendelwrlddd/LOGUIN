@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vinland Login</title>
+    <link rel="stylesheet" href="stilos.css">
+    <link rel="shortcut icon" href="./img/thorfinn_karlsefni_vinland_saga_png_render_by_marcopolo157_dg2h0df-414w-2x.png" type="image/x-icon">
+</head>
+<body>
+    <div class="wrapper">
+        <div class="container">
+            <div class="tabs">
+                <!-- Aba Entrar -->
+                <input type="radio" class="tabs__button" name="signForm" id="signIn" checked />
+                <label class="tabs__text" for="signIn">Entrar</label>
+                <div class="tabs__content">
+                    <h1>Bem vindo!</h1>
+                    <p>Volte ao seu caminho</p>
+                    <form class="form">
+                        <div class="input-group">
+                            <input class="input-group__input" type="email" placeholder="&nbsp;" name="email" required />
+                            <label class="input-group__label" for="email">Email</label>
+                        </div>
+                        <div class="input-group">
+                            <input class="input-group__input" type="password" name="password" placeholder="&nbsp;" required />
+                            <label class="input-group__label" for="password">Senha</label>
+                        </div>
+                        <div class="flex-space-between">
+                            <label class="flex-align-center"><input type="checkbox" /> Lembre de mim</label>
+                            <p><a href="#">Esqueceu sua senha?</a></p>
+                        </div>
+                        <button type="submit">Entrar</button>
+                    </form>
+                </div>
+
+                <!-- Aba Cadastro -->
+                <input type="radio" class="tabs__button" name="signForm" id="signUp" />
+                <label class="tabs__text" for="signUp">Inscrever-se</label>
+                <div class="tabs__content">
+                    <h1>Nova conta</h1>
+                    <p>Comece sua jornada agora</p>
+                    <form class="form">
+                        <div class="input-group">
+                            <input class="input-group__input" type="text" placeholder="&nbsp;" name="name" required />
+                            <label class="input-group__label" for="name">Nome</label>
+                        </div>
+                        <div class="input-group">
+                            <input class="input-group__input" type="email" placeholder="&nbsp;" name="email" required />
+                            <label class="input-group__label" for="email">Email</label>
+                        </div>
+                        <div class="input-group">
+                            <input class="input-group__input" type="password" placeholder="&nbsp;" name="password" required />
+                            <label class="input-group__label" for="password">Senha</label>
+                        </div>
+                        <p><small>Ao enviar este formulário, você confirma que leu e concordou com os <a href="#">Termos e Condições.</a></small></p>
+                        <button type="submit">Cadastrar</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="./script.js"></script>
+</body>
+</html>
