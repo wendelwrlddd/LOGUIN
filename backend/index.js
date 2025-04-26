@@ -16,19 +16,17 @@ const pool = mysql.createPool({
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
   ssl: { rejectUnauthorized: false },
-  waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0
+  connectTimeout: 30000 // 30 segundos
 });
 
-// Rota de teste DIRETA
-app.get('/', async (req, res) => {
+// Rota de saúde do banco
+app.get('/health', (req, res) => {
   pool.query('SELECT 1 + 1 AS result', (err, results) => {
     if (err) {
-      console.log('ERRO NO CÓDIGO PRINCIPAL:', err.message);
-      return res.status(500).send('Bugou no código principal');
+      console.error('Erro FATAL:', err);
+      return res.status(500).json({ status: 'dead' });
     }
-    res.json({ result: results[0].result });
+    res.json({ status: 'alive', result: results[0].result });
   });
 });
 
