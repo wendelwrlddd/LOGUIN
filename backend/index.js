@@ -9,6 +9,12 @@ const app = express();
 app.use(express.json());
 require("dotenv").config();
 
+const jwtSecret = process.env.JWT_SECRET;
+
+function generateToken(user) {
+  return jwt.sign({ id: user.id }, jwtSecret, { expiresIn: "1h" });
+}
+
 // Usando o pool de conexões
 const pool = mysql.createPool({
   host: process.env.DB_HOST,
