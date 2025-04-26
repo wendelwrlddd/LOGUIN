@@ -15,19 +15,21 @@ const pool = mysql.createPool({
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
-  ssl: { rejectUnauthorized: false },
-  connectTimeout: 30000 // 30 segundos
+  ssl: { rejectUnauthorized: false }, // SSL obrigatório na Railway
+  connectTimeout: 30000, // 30 segundos de timeout
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0
 });
 
-// Rota de saúde do banco
-app.get('/health', (req, res) => {
-  pool.query('SELECT 1 + 1 AS result', (err, results) => {
-    if (err) {
-      console.error('Erro FATAL:', err);
-      return res.status(500).json({ status: 'dead' });
-    }
-    res.json({ status: 'alive', result: results[0].result });
-  });
+// Teste de conexão ao iniciar
+pool.getConnection((err, conn) => {
+  if (err) {
+    console.error('❌ ERRO DE CONEXÃO:', err.message);
+    process.exit(1);
+  }
+  console.log('✅ Conectado ao MySQL!');
+  conn.release();
 });
 
 
