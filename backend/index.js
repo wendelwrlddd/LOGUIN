@@ -9,15 +9,29 @@ const app = express();
 app.use(express.json());
 require("dotenv").config();
 
-const jwtSecret = process.env.JWT_SECRET;
-
-
-const connection = mysql.createConnection(process.env.MYSQL_URL);
-
-connection.connect((err) => {
-  if (err) throw err;
-  console.log('Conectado ao banco de dados!');
+const pool = mysql.createPool({
+  host: process.env.DB_HOST,
+  port: process.env.DB_PORT,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME,
+  ssl: { rejectUnauthorized: false },
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0
 });
+
+// Rota de teste DIRETA
+app.get('/', async (req, res) => {
+  pool.query('SELECT 1 + 1 AS result', (err, results) => {
+    if (err) {
+      console.log('ERRO NO CÓDIGO PRINCIPAL:', err.message);
+      return res.status(500).send('Bugou no código principal');
+    }
+    res.json({ result: results[0].result });
+  });
+});
+
 
 // Servir arquivos estáticos do frontend
 app.use(express.static(path.join(__dirname, "../frontend")));
