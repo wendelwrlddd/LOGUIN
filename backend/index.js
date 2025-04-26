@@ -12,20 +12,11 @@ require("dotenv").config();
 const jwtSecret = process.env.JWT_SECRET;
 
 
-const connection = mysql.createConnection({
-  host: process.env.MYSQLHOST,
-  port: process.env.MYSQLPORT,
-  user: process.env.MYSQLUSER,
-  password: process.env.MYSQLPASSWORD,
-  database: process.env.MYSQLDATABASE
-});
+const connection = mysql.createConnection(process.env.MYSQL_URL);
 
 connection.connect((err) => {
-  if (err) {
-    console.error('Erro ao conectar ao banco de dados:', err.message);
-    return;
-  }
-  console.log('Conectado ao banco de dados com sucesso!');
+  if (err) throw err;
+  console.log('Conectado ao banco de dados!');
 });
 
 // Servir arquivos estáticos do frontend
