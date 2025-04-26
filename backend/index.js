@@ -13,18 +13,19 @@ const jwtSecret = process.env.JWT_SECRET;
 
 
 const connection = mysql.createConnection({
-  host: process.env.DB_HOST,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD, // Substitua pela senha do banco
-  database: process.env.DB_DATABASE
+  host: process.env.MYSQLHOST,
+  port: process.env.MYSQLPORT,
+  user: process.env.MYSQLUSER,
+  password: process.env.MYSQLPASSWORD,
+  database: process.env.MYSQLDATABASE
 });
 
 connection.connect((err) => {
   if (err) {
-    console.error('Erro de conexão: ' + err.stack);
+    console.error('Erro ao conectar ao banco de dados:', err.message);
     return;
   }
-  console.log('Conectado ao banco de dados com ID ' + connection.threadId);
+  console.log('Conectado ao banco de dados com sucesso!');
 });
 
 // Servir arquivos estáticos do frontend
