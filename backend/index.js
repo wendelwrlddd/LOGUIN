@@ -9,6 +9,7 @@ const app = express();
 app.use(express.json());
 require("dotenv").config();
 
+// Usando o pool de conexões
 const pool = mysql.createPool({
   host: process.env.DB_HOST,
   port: process.env.DB_PORT,
@@ -32,7 +33,6 @@ pool.getConnection((err, conn) => {
   conn.release();
 });
 
-
 // Servir arquivos estáticos do frontend
 app.use(express.static(path.join(__dirname, "../frontend")));
 
@@ -46,7 +46,7 @@ app.post("/register", (req, res) => {
   const { name, email, password } = req.body;
 
   // Verifica se o usuário já existe
-  connection.query("SELECT * FROM users WHERE email = ?", [email], (err, results) => {
+  pool.query("SELECT * FROM users WHERE email = ?", [email], (err, results) => {
     if (err) return res.status(500).json({ error: "Erro no banco de dados" });
 
     if (results.length > 0) {
@@ -57,7 +57,7 @@ app.post("/register", (req, res) => {
     const hashedPassword = bcrypt.hashSync(password, 8);
 
     // Inserir novo usuário
-    connection.query("INSERT INTO users (name, email, password) VALUES (?, ?, ?)", 
+    pool.query("INSERT INTO users (name, email, password) VALUES (?, ?, ?)", 
       [name, email, hashedPassword], (err, result) => {
       if (err) return res.status(500).json({ error: "Erro ao registrar usuário" });
 
@@ -73,7 +73,7 @@ app.post("/login", (req, res) => {
   const { email, password } = req.body;
 
   // Verifica se o usuário existe
-  connection.query("SELECT * FROM users WHERE email = ?", [email], (err, results) => {
+  pool.query("SELECT * FROM users WHERE email = ?", [email], (err, results) => {
     if (err) return res.status(500).json({ error: "Erro no banco de dados" });
 
     const user = results[0];
@@ -88,13 +88,13 @@ app.post("/login", (req, res) => {
 
 // Mini diário
 app.get("/dashboard", authMiddleware, (req, res) => {
-  connection.query("SELECT * FROM users WHERE id = ?", [req.userId], (err, results) => {
+  pool.query("SELECT * FROM users WHERE id = ?", [req.userId], (err, results) => {
     if (err) return res.status(500).json({ error: "Erro no banco de dados" });
 
     const user = results[0];
     if (!user) return res.status(404).json({ error: "Usuário não encontrado" });
 
-    connection.query("SELECT * FROM diary WHERE user_id = ?", [user.id], (err, diaryResults) => {
+    pool.query("SELECT * FROM diary WHERE user_id = ?", [user.id], (err, diaryResults) => {
       if (err) return res.status(500).json({ error: "Erro ao recuperar diário" });
       res.json({ message: `Bem-vindo, ${user.name}`, diary: diaryResults });
     });
@@ -105,7 +105,7 @@ app.get("/dashboard", authMiddleware, (req, res) => {
 app.post("/add-diary", authMiddleware, (req, res) => {
   const { content } = req.body;
 
-  connection.query("INSERT INTO diary (user_id, content) VALUES (?, ?)", [req.userId, content], (err) => {
+  pool.query("INSERT INTO diary (user_id, content) VALUES (?, ?)", [req.userId, content], (err) => {
     if (err) return res.status(500).json({ error: "Erro ao adicionar entrada" });
     res.json({ message: "Entrada de diário adicionada!" });
   });
@@ -114,3 +114,4 @@ app.post("/add-diary", authMiddleware, (req, res) => {
 app.listen(3000, () => {
   console.log("Server running at http://localhost:3000");
 });
+
