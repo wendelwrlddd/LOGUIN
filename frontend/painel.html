@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <title>Painel</title>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
-
   <link rel="stylesheet" href="stilos.css">
   <style>
     /* Layout para centralizar o container e posicionar Marcados à esquerda */
@@ -25,20 +24,21 @@
 
     /* Painel de Marcados à esquerda da tela inteira */
     #marked-container {
-      width: 20%;  /* O painel de Marcados ocupa 20% da largura */
-      position: fixed;
+      width: 40%;  /* O painel de Marcados ocupa 20% da largura */
+      
       top: 20px;
       left: 50px;
       background-color: #fff;
       padding: 20px;
       border-radius: 8px;
       box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-      height: auto;
+      max-height: 80vh;       /* Altura máxima relativa à viewport */
+      overflow-y: auto;       /* Habilita barra de rolagem vertical */
     }
 
     /* Container principal no centro */
     .container {
-      width: 70%; /* O container vai ocupar 70% da largura */
+      width: 90% !important; /* O container vai ocupar 70% da largura */
       background-color: #fff;
       padding: 20px;
       border-radius: 8px;
@@ -69,6 +69,20 @@
     .message-time {
       font-size: 0.9em;
       color: #777;
+    }
+
+    /* Scroll para lista de entradas do diário */
+    #diary-list {
+      max-height: 400px;    /* Altura fixa máxima para o UL */
+      overflow-y: auto;     /* Barra de rolagem vertical */
+      padding-left: 0;      /* Remove indentação padrão */
+      margin-top: 10px;
+      list-style: none;      /* Remove marcadores padrões */
+    }
+
+    #diary-list li {
+      padding: 10px;
+      border-bottom: 1px solid #eee;
     }
   </style>
 </head>
@@ -104,82 +118,81 @@
     document.getElementById("boas-vindas").innerText = `Olá, ${localStorage.getItem('username')}!`;
 
     async function fetchDiary() {
-  try {
-    const res = await fetch("/dashboard", {
-      headers: { Authorization: `Bearer ${window.token}` },
-    });
-    
-    if (res.status === 401) {
-      alert("Você não está autorizado. Por favor, faça login.");
-      window.location.href = '/login';
-      return;
+      try {
+        const res = await fetch("/dashboard", {
+          headers: { Authorization: `Bearer ${window.token}` },
+        });
+        
+        if (res.status === 401) {
+          alert("Você não está autorizado. Por favor, faça login.");
+          window.location.href = '/login';
+          return;
+        }
+
+        const data = await res.json();
+        console.log("Dados recebidos:", data);
+
+        // Exibe as mensagens no diário
+        if (Array.isArray(data.diary)) {
+          const list = document.getElementById("diary-list");
+          list.innerHTML = "";
+
+          data.diary.forEach(entry => {
+            const li = document.createElement("li");
+            li.innerHTML = `
+              <span 
+                class="star ${entry.isStarred ? 'fa-solid fa-star' : 'fa-regular fa-star'}" 
+                data-id="${entry.id}" 
+                onclick="toggleStar(this)"
+              ></span>
+              <span>${entry.content}</span>
+              <span class="message-time">${new Date(entry.created_at).toLocaleString()}</span>
+            `;
+            list.appendChild(li);
+          });
+        }
+
+        // Exibe as mensagens marcadas
+        const markedList = document.getElementById("marked-list");
+        markedList.innerHTML = "";
+
+        if (Array.isArray(data.starred)) {
+          data.starred.forEach(entry => {
+            const div = document.createElement("div");
+            div.className = "starred-message";
+            div.innerHTML = `
+              <p>${entry.content}</p>
+              <span class="message-time">${new Date(entry.created_at).toLocaleString()}</span>
+            `;
+            markedList.appendChild(div);
+          });
+        }
+
+      } catch (error) {
+        console.error("Erro ao carregar o diário:", error);
+      }
     }
 
-    const data = await res.json();
-    console.log("Dados recebidos:", data);
+    async function toggleStar(el) {
+      const id = el.getAttribute('data-id');
+      const isStarred = el.classList.contains('fa-solid');
 
-    // Exibe as mensagens no diário
-    if (Array.isArray(data.diary)) {
-      const list = document.getElementById("diary-list");
-      list.innerHTML = "";
-
-      data.diary.forEach(entry => {
-        const li = document.createElement("li");
-        li.innerHTML = `
-          <span 
-            class="star ${entry.isStarred ? 'fa-solid fa-star' : 'fa-regular fa-star'}" 
-            data-id="${entry.id}" 
-            onclick="toggleStar(this)"
-          ></span>
-          <span>${entry.content}</span>
-          <span class="message-time">${new Date(entry.created_at).toLocaleString()}</span>
-        `;
-        list.appendChild(li);
+      // Envia a mudança de estrela para o servidor
+      const res = await fetch(`/toggle-star/${id}`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${window.token}` },
+        body: JSON.stringify({ isStarred: !isStarred })  // Inverte o estado da estrela
       });
+
+      if (res.ok) {
+        // Altera a classe da estrela para refletir a seleção ou deseleção
+        el.classList.toggle('fa-solid');  
+        el.classList.toggle('fa-regular');  // Alterna entre 'fa-solid' e 'fa-regular'
+        fetchDiary(); // Atualiza a lista de marcados
+      } else {
+        alert('Erro ao atualizar estrela');
+      }
     }
-
-    // Exibe as mensagens marcadas
-    const markedList = document.getElementById("marked-list");
-    markedList.innerHTML = "";
-
-    if (Array.isArray(data.starred)) {
-      data.starred.forEach(entry => {
-        const div = document.createElement("div");
-        div.className = "starred-message";
-        div.innerHTML = `
-          <p>${entry.content}</p>
-          <span class="message-time">${new Date(entry.created_at).toLocaleString()}</span>
-        `;
-        markedList.appendChild(div);
-      });
-    }
-
-  } catch (error) {
-    console.error("Erro ao carregar o diário:", error);
-  }
-}
-
-async function toggleStar(el) {
-  const id = el.getAttribute('data-id');
-  const isStarred = el.classList.contains('fa-solid');
-
-  // Envia a mudança de estrela para o servidor
-  const res = await fetch(`/toggle-star/${id}`, {
-    method: 'POST',
-    headers: { Authorization: `Bearer ${window.token}` },
-    body: JSON.stringify({ isStarred: !isStarred })  // Inverte o estado da estrela
-  });
-
-  if (res.ok) {
-    // Altera a classe da estrela para refletir a seleção ou deseleção
-    el.classList.toggle('fa-solid');  
-    el.classList.toggle('fa-regular');  // Alterna entre 'fa-solid' e 'fa-regular'
-    fetchDiary(); // Atualiza a lista de marcados
-  } else {
-    alert('Erro ao atualizar estrela');
-  }
-}
-
 
 
     function logout() {
@@ -206,6 +219,7 @@ async function toggleStar(el) {
   </script>
 </body>
 </html>
+
 
 
 
