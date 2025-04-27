@@ -3,10 +3,84 @@
 <head>
   <meta charset="UTF-8">
   <title>Painel</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+
   <link rel="stylesheet" href="stilos.css">
+  <style>
+    /* Layout para centralizar o container e posicionar Marcados à esquerda */
+    body {
+      display: flex;
+      justify-content: center;  /* Centraliza o conteúdo na tela */
+      padding: 20px;
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f4;
+      margin: 0;
+    }
+
+    .wrapper {
+      display: flex;
+      justify-content: center;
+      width: 100%;
+    }
+
+    /* Painel de Marcados à esquerda da tela inteira */
+    #marked-container {
+      width: 20%;  /* O painel de Marcados ocupa 20% da largura */
+      position: fixed;
+      top: 20px;
+      left: 50px;
+      background-color: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      height: auto;
+    }
+
+    /* Container principal no centro */
+    .container {
+      width: 70%; /* O container vai ocupar 70% da largura */
+      background-color: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      margin-left: 150px;  /* Dá espaço suficiente à esquerda para o painel */
+    }
+
+    h2 {
+      margin-top: 0;
+    }
+
+    .starred-message {
+      margin-bottom: 5px;
+    }
+
+    .star {
+      cursor: pointer;
+    }
+
+    .star.selected {
+      color: gold;
+    }
+
+    .star.deselected {
+      color: gray;
+    }
+
+    .message-time {
+      font-size: 0.9em;
+      color: #777;
+    }
+  </style>
 </head>
 <body>
   <div class="wrapper">
+    <!-- Painel de Marcados à esquerda -->
+    <div id="marked-container">
+      <h2>fav</h2>
+      <div id="marked-list"></div>
+    </div>
+
+    <!-- Container principal centralizado -->
     <div class="container">
       <h1>Bem-vindo ao Sistema de Diário</h1>
       <p id="boas-vindas"></p>
@@ -18,55 +92,123 @@
       <button onclick="logout()" style="margin-top:20px;">Sair</button>
     </div>
   </div>
-  <script> 
-    const token = localStorage.getItem("token");
-    const name = localStorage.getItem("username");
-    document.getElementById("boas-vindas").innerText = `Olá, ${name}!`;
+
+  <script>
+    // Verifica o token e redireciona para o login se não houver um token válido
+    window.token = window.token || localStorage.getItem('token');
+    if (!window.token) {
+      alert("Token inválido ou não encontrado!");
+      window.location.href = '/login';
+    }
+
+    document.getElementById("boas-vindas").innerText = `Olá, ${localStorage.getItem('username')}!`;
 
     async function fetchDiary() {
-      const res = await fetch("/dashboard", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const data = await res.json();
-      const list = document.getElementById("diary-list");
-      list.innerHTML = ""; // Limpa o conteúdo da lista antes de adicionar as novas entradas
+  try {
+    const res = await fetch("/dashboard", {
+      headers: { Authorization: `Bearer ${window.token}` },
+    });
+    
+    if (res.status === 401) {
+      alert("Você não está autorizado. Por favor, faça login.");
+      window.location.href = '/login';
+      return;
+    }
 
-      // Exibindo cada entrada de diário
+    const data = await res.json();
+    console.log("Dados recebidos:", data);
+
+    // Exibe as mensagens no diário
+    if (Array.isArray(data.diary)) {
+      const list = document.getElementById("diary-list");
+      list.innerHTML = "";
+
       data.diary.forEach(entry => {
         const li = document.createElement("li");
-        li.innerText = entry.content; // Agora estamos acessando o campo "content" da entrada
+        li.innerHTML = `
+          <span 
+            class="star ${entry.isStarred ? 'fa-solid fa-star' : 'fa-regular fa-star'}" 
+            data-id="${entry.id}" 
+            onclick="toggleStar(this)"
+          ></span>
+          <span>${entry.content}</span>
+          <span class="message-time">${new Date(entry.created_at).toLocaleString()}</span>
+        `;
         list.appendChild(li);
       });
     }
 
-    document.getElementById("diary-form").addEventListener("submit", async (e) => {
+    // Exibe as mensagens marcadas
+    const markedList = document.getElementById("marked-list");
+    markedList.innerHTML = "";
+
+    if (Array.isArray(data.starred)) {
+      data.starred.forEach(entry => {
+        const div = document.createElement("div");
+        div.className = "starred-message";
+        div.innerHTML = `
+          <p>${entry.content}</p>
+          <span class="message-time">${new Date(entry.created_at).toLocaleString()}</span>
+        `;
+        markedList.appendChild(div);
+      });
+    }
+
+  } catch (error) {
+    console.error("Erro ao carregar o diário:", error);
+  }
+}
+
+async function toggleStar(el) {
+  const id = el.getAttribute('data-id');
+  const isStarred = el.classList.contains('fa-solid');
+
+  // Envia a mudança de estrela para o servidor
+  const res = await fetch(`/toggle-star/${id}`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${window.token}` },
+    body: JSON.stringify({ isStarred: !isStarred })  // Inverte o estado da estrela
+  });
+
+  if (res.ok) {
+    // Altera a classe da estrela para refletir a seleção ou deseleção
+    el.classList.toggle('fa-solid');  
+    el.classList.toggle('fa-regular');  // Alterna entre 'fa-solid' e 'fa-regular'
+    fetchDiary(); // Atualiza a lista de marcados
+  } else {
+    alert('Erro ao atualizar estrela');
+  }
+}
+
+
+
+    function logout() {
+      localStorage.clear();
+      window.location.href = '/login';
+    }
+
+    document.getElementById("diary-form").addEventListener("submit", async e => {
       e.preventDefault();
       const content = document.getElementById("diary-entry").value;
-
-      // Enviar nova entrada de diário
       await fetch("/add-diary", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${window.token}`
         },
-        body: JSON.stringify({ content }),
+        body: JSON.stringify({ content })
       });
-
-      // Limpar o campo de texto após enviar a entrada
       document.getElementById("diary-entry").value = "";
-
-      // Atualizar o diário
       fetchDiary();
     });
 
-    function logout() {
-      localStorage.clear();
-      window.location.href = "/";
-    }
-
-    // Carregar o diário ao iniciar a página
     fetchDiary();
   </script>
 </body>
 </html>
+
+
+
+
+
+

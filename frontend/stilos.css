@@ -173,3 +173,91 @@ button:hover {
 .tabs__button:checked + .tabs__text + .tabs__content {
   display: block;
 }
+
+li{
+  padding: 5px;
+}
+
+@media (max-width: 768px) {
+  body {
+    padding: 10px;
+  }
+  #marked-container {
+    position: relative;
+    width: 100%;
+    top: auto;
+    left: auto;
+    margin-bottom: 20px;
+    box-shadow: none;
+  }
+  .container {
+    width: 100%;
+    margin-left: 0;
+    padding: 15px;
+  }
+}
+
+@media (max-width: 480px) {
+  .star { font-size: 1em; }
+  textarea { font-size: 0.9em; }
+  button { font-size: 0.9em; height: 35px; }
+}
+
+
+
+
+
+
+
+
+
+body {
+  display: flex;
+  justify-content: center;
+  padding: 20px;
+  font-family: "Lato", sans-serif;
+  background-size: cover;
+  background-image: url('img/wp12933215.webp');
+  background-position: center;
+  margin: 0;
+  color: #333;
+}
+
+.wrapper {
+  display: flex;
+  width: 100%;
+  max-width: 1200px;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+/* Marcados panel - desktop */
+#marked-container {
+  width: 20%;
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  background-color: #fff;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+/* Main container - desktop */
+.container {
+  width: 70%;
+  background-color: #fff;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+  margin-left: 260px; /* space for fixed panel */
+}
+
+/* Stars */
+.star { cursor: pointer; font-size: 1.2em; }
+.fa-solid.star { color: gold; }
+.fa-regular.star { color: gray; }
+
+.message-time { font-size: 0.9em; color: #777; }
+.starred-message { margin-bottom: 10px; }
+
