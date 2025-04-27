@@ -103,7 +103,7 @@
         <button type="submit">Adicionar</button>
       </form>
       <ul id="diary-list"></ul>
-      <button onclick="logout()" style="margin-top:20px;">Sair</button>
+      <a href="index.html"><button style="margin-top:20px;">Sair</button></a>
     </div>
   </div>
 
@@ -214,6 +214,8 @@
       document.getElementById("diary-entry").value = "";
       fetchDiary();
     });
+
+
 
     fetchDiary();
   </script>
